@@ -4,7 +4,7 @@ on:
     types: [created]
 
 jobs:
-  quality:
+  build:
     runs-on: ubuntu-latest
 
     steps:
@@ -54,7 +54,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          args: '*{.sh,.pyz}'
+          args: '*.sh'
 
       # #----------------------------------------------
       # #       run pyright
