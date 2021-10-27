@@ -20,4 +20,4 @@ requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poe.tasks]
-make = { shell = "cp -r calendar_stack dist/ && python -m pip install . --target ./dist && rm -rf dist/*.dist-info && python -m zipapp -p \"/usr/bin/env python3\" dist -o calendar_stack.pyz && cp calendar_stack.pyz \"calendar_stack.sh\" && rm -rf dist/" }
+make = { shell = "cp -r calendar_stack dist/ && python -m pip install . --target ./dist && rm -rf dist/*.dist-info && python -m zipapp -p \"/usr/bin/env python3\" dist -o calendar_stack.pyz && cp calendar_stack.pyz \"calendar_stack.sh\" && chmod +x calendar_stack.sh && rm -rf dist/" }
