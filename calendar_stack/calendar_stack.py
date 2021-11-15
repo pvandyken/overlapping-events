@@ -82,10 +82,10 @@ def get_overlapping_components(G: nx.Graph):
         for event in clique:
             width = G.nodes[event]["widthFactor"] + [size]
             G.add_node(event, widthFactor=width)
-    
+
     num_widths = lambda event: len(set(G.nodes[event]["widthFactor"]))
 
-    
+
     grouped = [(i, [*group]) for i, group in it.groupby(G.nodes, num_widths)]
     ranked_events = [
         cast(Set[Event], set(events)) for _, events in
@@ -95,8 +95,8 @@ def get_overlapping_components(G: nx.Graph):
     for clique in cliques:
         clique_s = set(clique)
         sort_by_priority = lambda events: sorted(
-            events, 
-            key=attrgetter("priority"), 
+            events,
+            key=attrgetter("priority"),
             reverse=True
         )
         ranked_clique = [*it.chain(*[
@@ -120,7 +120,7 @@ def get_overlapping_components(G: nx.Graph):
         yield copyas(cast(Event, event), **data)
 
 
-def main(args: List[str]):
+def main(args: List[str] = None):
     parser = argparse.ArgumentParser()
     parser.add_argument("input")
     parser.add_argument("--output", "-o", required=False)

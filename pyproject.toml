@@ -15,6 +15,9 @@ cattrs = "^1.8.0"
 [tool.poetry.dev-dependencies]
 poethepoet = "^0.10.0"
 
+[tool.poetry.scripts]
+calendar-stack = "calendar_stack.calendar_stack:main"
+
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
