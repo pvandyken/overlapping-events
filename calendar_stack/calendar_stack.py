@@ -24,7 +24,7 @@ class Event:
     duration: str
     priority: int = 0
     color: Optional[str] = None
-    id: Optional[str] = None
+    link: Optional[str] = None
     uid: float = random.getrandbits(128)
     widthFactor: Optional[int] = None
     position: Optional[int] = None
