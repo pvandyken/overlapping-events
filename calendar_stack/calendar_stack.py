@@ -1,4 +1,4 @@
-from typing import Any, Generator, List, Optional, Type, TypeVar,  cast, Iterator, Set
+from typing import Any, Generator, List, Optional, Type, TypeVar, Union,  cast, Iterator, Set
 import sys
 import random
 import argparse
@@ -28,6 +28,7 @@ class Event:
     uid: float = random.getrandbits(128)
     widthFactor: Optional[int] = None
     position: Optional[int] = None
+    room: Union[str, List[str], None] = None
 
     def set_width(self, width: int):
         return copyas(self, widthFactor=width)
@@ -114,11 +115,16 @@ def get_overlapping_components(G: nx.Graph):
             else:
                 seen.add(position)
             G.nodes[event]["position"] = position
-    
+
     for event, data in G.nodes.items():
         data["widthFactor"] = max(data["widthFactor"])
         yield copyas(cast(Event, event), **data)
 
+
+def make_room_hashable(data: object, _):
+    if isinstance(data, list):
+        return tuple(data)
+    return data
 
 def main(args: List[str] = None):
     parser = argparse.ArgumentParser()
@@ -126,6 +132,7 @@ def main(args: List[str] = None):
     parser.add_argument("--output", "-o", required=False)
     parsed = parser.parse_args(args)
 
+    cattr.register_structure_hook(Union[str, List[str], None], make_room_hashable)
     config = cast(SiteConfig, cattr.structure(read_yaml(parsed.input), SiteConfig))
     graphs = [make_graph(day.events) for day in config.schedule.days]
     ordered = [get_overlapping_components(G) for G in graphs]
