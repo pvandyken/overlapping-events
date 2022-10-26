@@ -16,34 +16,20 @@ G = nx.Graph()
 T = TypeVar("T")
 
 
-def copyas(obj: T, **kwargs) -> T:
-    return obj.__class__(**{**attr.asdict(obj), **kwargs})
-
-
 @attr.define(frozen=True, kw_only=True)
 class AbstractEvent:
     time: str
     duration: str
     priority: int = 0
-    color: Optional[str] = None
-    uid: float = random.getrandbits(128)
+    # Need a uid so that events with the same time, duration, and priority don't
+    # collapse into each other when making the graph
+    uid: float = attr.field(factory=lambda: random.getrandbits(128))
+
+
+@attr.frozen
+class EventPosition:
     widthFactor: Optional[int] = None
     position: Optional[int] = None
-    room: Union[str, list[str], None] = None
-
-    def set_width(self, width: int):
-        return copyas(self, widthFactor=width)
-
-
-@attr.frozen(kw_only=True)
-class GenericEvent(AbstractEvent):
-    name: str
-    link: Optional[str] = None
-
-
-@attr.frozen(kw_only=True)
-class TutorialEvent(AbstractEvent):
-    tutorial: str
 
 
 @attr.define
@@ -51,7 +37,7 @@ class Day:
     day: int
     month: int
     year: int
-    events: list[Union[GenericEvent, TutorialEvent]]
+    events: list[AbstractEvent]
 
 
 @attr.define
@@ -68,9 +54,9 @@ class SiteConfig:
 
 def make_graph(events: list[AbstractEvent]):
     G = nx.Graph()
-    G.add_nodes_from(events, widthFactor=[], position=-1)
+    G.add_nodes_from(events, widthFactor=None, position=-1)
     for a, b in it.combinations(events, 2):
-        a_start, a_dur, b_start, b_dur, *_ = [
+        a_start, a_dur, b_start, b_dur = [
             to_hr_float(x) for x in [a.time, a.duration, b.time, b.duration]
         ]
         if overlap(a_start, a_start + a_dur, b_start, b_start + b_dur):
@@ -99,8 +85,9 @@ def get_overlapping_components(G: nx.Graph):
     for clique in cliques:
         size = len(clique)
         for event in clique:
-            width = G.nodes[event]["widthFactor"] + [size]
-            G.add_node(event, widthFactor=width)
+            if not G.nodes[event]["widthFactor"]:
+                G.nodes[event]["widthFactor"] = []
+            G.nodes[event]["widthFactor"].append(size)
 
     num_widths = lambda event: len(set(G.nodes[event]["widthFactor"]))
 
@@ -135,7 +122,7 @@ def get_overlapping_components(G: nx.Graph):
 
     for event, data in G.nodes.items():
         data["widthFactor"] = max(data["widthFactor"])
-        yield copyas(cast(AbstractEvent, event), **data)
+        yield EventPosition(**data)
 
 
 def make_room_hashable(data: object, _):
@@ -147,25 +134,22 @@ def make_room_hashable(data: object, _):
 def main(args: list[str] | None = None):
     parser = argparse.ArgumentParser()
     parser.add_argument("input")
-    parser.add_argument("--output", "-o", required=False)
     parsed = parser.parse_args(args)
 
     cattr.register_structure_hook(Union[str, list[str], None], make_room_hashable)
-    config = cast(SiteConfig, cattr.structure(read_yaml(parsed.input), SiteConfig))
+    config = cattr.structure(read_yaml(parsed.input), SiteConfig)
     graphs = [make_graph(day.events) for day in config.schedule.days]
-    ordered = [get_overlapping_components(G) for G in graphs]
-    days = [
-        attr.asdict(copyas(day, events=list(events)))
-        for day, events in zip(config.schedule.days, ordered)
-    ]
 
-    if parsed.output:
-        with open("calendar.json", "w") as file:
-            json.dump(days, file)
-    else:
-        print(json.dumps(days))
+    print(
+        json.dumps(
+            [
+                [attr.asdict(event) for event in get_overlapping_components(G)]
+                for G in graphs
+            ]
+        )
+    )
     return 0
 
 
 if __name__ == "__main__":
-    exit(main(sys.argv[1:]))
+    exit(main(["../brainhack/config.yaml"]))
