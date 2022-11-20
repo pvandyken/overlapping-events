@@ -49,7 +49,7 @@ class ScheduleConfig:
 
 @attr.define
 class SiteConfig:
-    schedule: ScheduleConfig
+    schedule: list[ScheduleConfig]
 
 
 def make_graph(events: list[AbstractEvent]):
@@ -138,13 +138,19 @@ def main(args: list[str] | None = None):
 
     cattr.register_structure_hook(Union[str, list[str], None], make_room_hashable)
     config = cattr.structure(read_yaml(parsed.input), SiteConfig)
-    graphs = [make_graph(day.events) for day in config.schedule.days]
+    graphs = [
+        [make_graph(day.events) for day in schedule.days]
+        for schedule in config.schedule
+    ]
 
     print(
         json.dumps(
             [
-                [attr.asdict(event) for event in get_overlapping_components(G)]
-                for G in graphs
+                [
+                    [attr.asdict(event) for event in get_overlapping_components(G)]
+                    for G in schedule
+                ]
+                for schedule in graphs
             ]
         )
     )
