@@ -7,18 +7,18 @@ license = "MIT"
 
 [tool.poetry.dependencies]
 python = "^3.8"
-networkx = "^2.6.3"
-PyYAML = "^5.4.1"
-attrs = "^21.2.0"
-cattrs = "^1.8.0"
+networkx = "^3.1"
+PyYAML = "^6.0.1"
+attrs = "^23.1.0"
+cattrs = "^23.1.2"
 
 [tool.poetry.scripts]
 calendar-stack = "calendar_stack.calendar_stack:main"
 
 [tool.poetry.group.dev.dependencies]
-black = "^22.10.0"
+black = "^23.7.0"
 isort = "^5.10.1"
-poethepoet = "^0.10.0"
+poethepoet = "^0.22.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
